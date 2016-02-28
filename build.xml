@@ -146,6 +146,8 @@
 				<include name="Packages/**/*.txt" />
 				<include name="QuestScripts/**/*.nut" />
 				<include name="Scenery/**/*.txt" />
+				<include name="Instance/**/*.txt" />
+				<include name="Instance/**/*.nut" />
 				<include name="Scenery/**/*.zip" />
 				<include name="SpawnPackages/**/*.txt" />
 
@@ -186,6 +188,7 @@
 			<link target="/usr/share/tawd/Packages" name="/var/lib/tawd/Packages" />
 			<link target="/usr/share/tawd/QuestScripts" name="/var/lib/tawd/QuestScripts" />
 			<link target="/usr/share/tawd/Scenery" name="/var/lib/tawd/Scenery" />
+			<link target="/usr/share/tawd/Instance" name="/var/lib/tawd/Instance" />
 			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
 
 			
