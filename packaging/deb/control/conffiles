@@ -1,0 +1,9 @@
+/etc/tawd/ServerConfig.txt
+/etc/tawd/in_game_news
+/etc/tawd/loading_announcements
+/etc/tawd/tips
+/var/lib/tawd/Accounts/00000001.txt
+/var/lib/tawd/Dynamic/AccountList.txt
+/var/lib/tawd/Dynamic/ZoneIndex.txt
+/var/lib/tawd/Dynamic/ZoneDef.txt
+/var/lib/tawd/SessionVars.txt

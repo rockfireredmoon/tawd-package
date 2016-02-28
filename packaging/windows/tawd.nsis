@@ -1,0 +1,226 @@
+;Earth Eternal - TAWD (The Anubian War Server)
+
+;--------------------------------
+;Include Modern UI
+
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "sidebar.bmp"
+  !define MUI_UNWELCOMEFINISHPAGE_BITMAP "sidebar.bmp"
+  !include "MUI2.nsh"
+  !include LogicLib.nsh
+
+
+;--------------------------------
+;General
+
+  ;Name and file
+  Name "TAW Server"
+  OutFile ..\..\target\release\EarthEternal_TAWD_Setup.exe
+
+  ;Default installation folder
+  InstallDir "$PROGRAMFILES\Earth Eternal - TAWD"
+  
+  ;Get installation folder from registry if available
+  InstallDirRegKey HKCU "Software\Earth Eternal - TAWD" ""
+
+  ;Request application privileges for Windows Vista
+  ;RequestExecutionLevel admin
+
+
+;--------------------------------
+;Variables
+
+  Var StartMenuFolder
+;--------------------------------
+;Interface Settings
+
+  !define MUI_ABORTWARNING
+  !define MUI_HEADERIMAGE
+  !define MUI_HEADERIMAGE_BITMAP "banner.bmp" ; optional
+
+;--------------------------------
+;Pages
+
+  !insertmacro MUI_PAGE_WELCOME
+  !define MUI_PAGE_CUSTOMFUNCTION_SHOW licpageshow
+  !insertmacro MUI_PAGE_LICENSE "License.txt"
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+
+;Start Menu Folder Page Configuration
+  !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKCU" 
+  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Earth Eternal - TAWD" 
+  !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Earth Eternal - TAWD"
+  
+  !insertmacro MUI_PAGE_STARTMENU Application $StartMenuFolder
+
+  !insertmacro MUI_PAGE_INSTFILES
+  !define MUI_FINISHPAGE_NOAUTOCLOSE
+  !define MUI_FINISHPAGE_RUN
+  !define MUI_FINISHPAGE_RUN_NOTCHECKED
+  !define MUI_FINISHPAGE_RUN_TEXT "Start TAWD Service Now"
+  !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
+  !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+  !define MUI_FINISHPAGE_SHOWREADME $INSTDIR\readme.txt
+  
+  
+  !insertmacro MUI_PAGE_FINISH
+  
+  !insertmacro MUI_UNPAGE_CONFIRM
+  !insertmacro MUI_UNPAGE_INSTFILES
+  !insertmacro MUI_UNPAGE_FINISH
+  
+;--------------------------------
+;Languages
+ 
+  !insertmacro MUI_LANGUAGE "English"
+
+;--------------------------------
+;Functions
+
+
+;Function .onInit
+;UserInfo::GetAccountType
+;pop $0
+;${If} $0 != "admin" ;Require admin rights on NT4+
+;    MessageBox mb_iconstop "Administrator rights required!"
+;    SetErrorLevel 740 ;ERROR_ELEVATION_REQUIRED
+;    Quit
+;${EndIf}
+;FunctionEnd
+
+
+;--------------------------------
+;Installer Sections
+
+Section "Game Server" GameServer
+
+  SetOutPath "$INSTDIR"
+  
+  ;ADD YOUR OWN FILES HERE...
+  File /r ..\..\target\staging\*.*
+  File planetforever.ico
+  File readme.txt  
+  
+  SetOverwrite off
+  File /r ..\..\common\server\*.*
+  SetOverwrite on
+  
+  ;Store installation folder
+  WriteRegStr HKCU "Software\Earth Eternal - TAWD" "" $INSTDIR
+  
+  ;Create uninstaller
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+  
+  ;Create shortcuts
+  CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
+  
+  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\TAW Server.lnk" "$INSTDIR\tawd.exe" \
+  	"" \
+    $INSTDIR\planetforever.ico 0 SW_SHOWNORMAL ALT|CONTROL|SHIFT|P "Earth Eternal - TAWD"
+  CreateShortCut "$SMPROGRAMS\$StartMenuFolder\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+SectionEnd
+
+Section "Basic Setup" BasicSetup
+
+  SetOutPath "$INSTDIR"
+  
+  SetOverwrite off
+  File /r ..\..\common\basicsetup\*.*
+  SetOverwrite on
+  
+SectionEnd
+
+Section "Service" Service
+
+  SimpleSC::StopService "TAWD" 1 30
+  Pop $0 ; 
+  SimpleSC::RemoveService "TAWD"
+  Pop $0 ;
+  SimpleSC::InstallService "TAWD" "The Anubian War Daemon" "16" "2" "$INSTDIR\tawdsvc.exe" "" "" ""
+  Pop $0 ;
+  ${If} $0 != "0" ;
+  	MessageBox mb_iconstop "Failed to install service (err: $0)!"
+  ${EndIf}
+
+SectionEnd
+
+Section "Assets" Assets
+  SetOutPath "$INSTDIR\asset"
+  File /r ..\..\target\asset\*.*
+SectionEnd
+
+;--------------------------------
+;Descriptions
+
+  ;Language strings
+  LangString DESC_GameServer ${LANG_ENGLISH} "Game Server."
+  LangString DESC_BasicSetup ${LANG_ENGLISH} "Basic Setup (admin user etc)."
+  LangString DESC_Service ${LANG_ENGLISH} "Windows Service (server runs automatically in background)."
+  LangString DESC_Assets ${LANG_ENGLISH} "Assets."
+
+  ;Assign language strings to sections
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${GameServer} $(DESC_GameServer)
+    !insertmacro MUI_DESCRIPTION_TEXT ${BasicSetup} $(DESC_BasicSetup)
+    !insertmacro MUI_DESCRIPTION_TEXT ${Assets} $(DESC_Assets)
+    !insertmacro MUI_DESCRIPTION_TEXT ${Service} $(DESC_Service)
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+;--------------------------------
+;Uninstaller Section
+
+Section "Uninstall"
+
+  ;ADD YOUR OWN FILES HERE...
+
+  Delete "$INSTDIR\Uninstall.exe"
+
+  RMDir "$INSTDIR"
+
+  !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuFolder
+    
+  Delete "$SMPROGRAMS\$StartMenuFolder\Uninstall.lnk"
+  Delete "$SMPROGRAMS\$StartMenuFolder\Earth Eternal - TAWD.lnk"
+  RMDir "$SMPROGRAMS\$StartMenuFolder"
+
+  DeleteRegKey /ifempty HKCR "taw"
+  DeleteRegKey /ifempty HKCU "Software\Earth Eternal - TAWD"
+
+  SimpleSC::ServiceIsRunning "TAWD"
+  Pop $0 ; returns an errorcode (<>0) otherwise success (0)
+  Pop $1 ; returns 1 (service is running) - returns 0 (service is not running)
+  ${If} $0 != "0" ;
+    SimpleSC::StopService "TAWD" 1 30
+    Pop $0 ; returns an errorcode (<>0) otherwise success (0)
+    ${If} $0 != "0" ;
+  	  MessageBox mb_iconstop "Failed to stop service (err: $0)!"
+    ${EndIf}
+  ${EndIf}
+  SimpleSC::RemoveService "TAWD"
+  Pop $0 ; returns an errorcode (<>0) otherwise success (0)
+  ${If} $0 != "0" ;
+    SimpleSC::StopService "TAWD" 1 30
+    Pop $0 ; returns an errorcode (<>0) otherwise success (0)
+    ${If} $0 != "0" ;
+  	  MessageBox mb_iconstop "Failed to remove service (err: $0)!"
+    ${EndIf}
+  ${EndIf}
+  
+SectionEnd
+
+Function licpageshow
+    FindWindow $0 "#32770" "" $HWNDPARENT
+    CreateFont $1 "Courier New" "$(^FontSize)"
+    GetDlgItem $0 $0 1000
+    SendMessage $0 ${WM_SETFONT} $1 1
+FunctionEnd
+
+Function LaunchLink
+ 
+  SimpleSC::StartService "TAWD" "" 30
+  Pop $0 ; returns an errorcode (<>0) otherwise success (0)
+  
+  ;Sleep 5000
+  ;ExecShell "" "$SMPROGRAMS\$StartMenuFolder\Earth Eternal - TAWD.lnk"
+  ;ExecShell "" "http://www.theanubianwar.com"
+FunctionEnd

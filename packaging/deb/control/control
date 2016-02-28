@@ -1,0 +1,12 @@
+Package: tawd
+Version: [[version]]
+Section: comm 
+Priority: optional
+Architecture: [[arch]]
+Essential: no
+Depends: libcurl3-cares | libcurl3, libssl1.0.0
+Installed-Size: 1024
+Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
+Provides: tawd
+Description: Earth Eternal - The Anubian War
+ Provides server and base data files.

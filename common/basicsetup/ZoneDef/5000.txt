@@ -1,0 +1,14 @@
+[ENTRY]
+ID=5000
+ACCOUNTID=1
+NAME=Grove
+TERRAINCONFIG=Terrain-Blend#Terrain-Blend.cfg
+ENVIRONMENTTYPE=CloudyDay
+Mode=1920
+ShardName=admin
+GroveName=admin
+WarpName=admin1
+Grove=1
+EnvironmentCycle=0
+DefLoc=2958,260,3821
+

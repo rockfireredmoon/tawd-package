@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tawd-package" default="release">
+
+	<property file="build.properties" />
+	<property name="tawd.home" value="../tawd" />
+	<property name="tawd.executables" value="${tawd.home}/SOURCE/Server" />
+	<property name="tawd.asset" value="${tawd.home}/asset" />
+
+	<property name="nsis.make" value="makensis" />
+
+	<property name="build.version" value="0.0.1" />
+	<property name="build.dir" value="${basedir}/target" />
+	<property name="build.staging" value="${build.dir}/staging" />
+	<property name="build.asset" value="${build.dir}/asset" />
+	<property name="build.release" value="${build.dir}/release" />
+
+	<!-- Task definitions for tasks not part of core Ant -->
+	<taskdef name="deb" classname="org.vafer.jdeb.ant.DebAntTask" classpath="tools/jdeb-1.5.jar" />
+
+	<!-- Supporting targets (not usually called directly) -->
+
+	<target name="release-windows-files">
+		<mkdir dir="${build.staging}" />
+		<copy todir="${build.staging}">
+			<fileset dir="${tawd.home}">
+				<include name="AIScript/**/*" />
+				<include name="Data/**/*" />
+				<include name="Instance/**/*" />
+				<include name="ItemMod/**/*" />
+				<include name="Loot/**/*" />
+				<include name="Packages/**/*" />
+				<include name="QuestScripts/**/*" />
+				<include name="Scenery/**/*" />
+				<include name="SpawnPackages/**/*" />
+				<exclude name="**/*.cnut" />
+			</fileset>
+		</copy>
+
+		<!-- Initial empty data dirs -->
+
+		<mkdir dir="${build.staging}/Accounts" />
+		<mkdir dir="${build.staging}/Dynamic" />
+		<mkdir dir="${build.staging}/Characters" />
+		<mkdir dir="${build.staging}/Grove" />
+		<mkdir dir="${build.staging}/CreditShop" />
+		<mkdir dir="${build.staging}/IGForum" />
+		<mkdir dir="${build.staging}/Petitions" />
+		<mkdir dir="${build.staging}/ZoneDef" />
+		<mkdir dir="${build.staging}/VirtualItems" />
+
+		<!-- Assets -->
+		<mkdir dir="${build.asset}" />
+		<copy todir="${build.asset}">
+			<fileset dir="${tawd.asset}">
+				<include name="Release/**/*.car" />
+			</fileset>
+		</copy>
+
+		<!-- Executables -->
+		<copy file="${tawd.executables}/tawd.exe" todir="${build.staging}" />
+		<copy file="${tawd.executables}/tawdsvc.exe" todir="${build.staging}" />
+	</target>
+
+	<target name="release-linux-deb">
+		<!--
+		<exec dir="${tawd.home}" executable="./configure" />
+		<echo>Removing all files for clean build</echo>
+		<exec dir="${tawd.home}" executable="make">
+			<arg value="clean" />
+		</exec>
+		-->
+		<echo>Building server from scratch</echo>
+		<exec failonerror="true" dir="${tawd.home}" executable="make">
+			<arg value="-j" />
+			<arg value="1" />
+		</exec>
+
+		<!-- Process control directory -->
+		<mkdir dir="${build.staging}" />
+		<copy todir="${build.staging}/control">
+			<fileset dir="${basedir}/packaging/deb/control" />
+			<filterset begintoken="[[" endtoken="]]">
+				<filter token="version" value="${build.fullversion}" />
+				<filter token="arch" value="${os.arch}" />
+			</filterset>
+		</copy>
+		
+		<!-- Configuration files -->
+		<copy file="${tawd.home}/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt"/>
+	</target>
+
+	<target name="clean-staging">
+		<delete dir="${build.staging}" />
+	</target>
+
+	<target name="init">
+		<tstamp>
+			<format property="build.date" pattern="yyyyMMDDHHmm" />
+		</tstamp>
+		<property name="build.fullversion">${build.version}-${build.date}</property>
+	</target>
+
+	<!-- Primary targets -->
+
+	<target name="release" depends="release-windows,release-linux">
+
+
+	</target>
+
+	<target name="release-linux" depends="init,clean-staging,release-linux-deb">
+		<mkdir dir="${build.dir}/release" />
+		<deb destfile="${build.dir}/release/tawd-${build.fullversion}-${os.arch}.deb" control="${build.staging}/control">
+
+			<!-- Service script -->
+
+			<tarfileset dir="${tawd.home}/Etc/Linux" prefix="/etc/init.d" filemode="755" username="root" group="root">
+				<include name="tawd" />
+			</tarfileset>
+
+			<!-- Server binary -->
+
+			<tarfileset dir="${tawd.home}/SOURCE/Server" prefix="/usr/bin" filemode="555" username="root" group="root">
+				<include name="tawd" />
+			</tarfileset>
+
+			<!-- Configuration -->
+			<tarfileset dir="${tawd.home}/asset" prefix="/etc/tawd" filemode="600" username="root" group="root">
+				<include name="in_game_news" />
+				<include name="tips" />
+				<include name="loading_announcements" />
+			</tarfileset>
+
+			<tarfileset dir="${build.staging}" filemode="600" username="root" group="root" prefix="/etc/tawd">
+				<include name="ServerConfig.txt"/>
+			</tarfileset>
+
+			<!-- Static game data -->
+			<tarfileset dir="${tawd.home}" prefix="/usr/share/tawd" username="root" group="root">
+
+				<include name="AIScript/**/*.nut" />
+				<include name="AIScript/**/*.txt" />
+				<include name="Data/**/*.txt" />
+				<include name="ItemMod/**/*.txt" />
+				<include name="ItemMod/**/*.csv" />
+				<include name="Loot/**/*.txt" />
+				<include name="Packages/**/*.txt" />
+				<include name="QuestScripts/**/*.nut" />
+				<include name="Scenery/**/*.txt" />
+				<include name="Scenery/**/*.zip" />
+				<include name="SpawnPackages/**/*.txt" />
+
+				<exclude name="Data/HTTPChecksum.txt" />
+			</tarfileset>
+			
+			<!-- Static assets -->
+			<tarfileset dir="${tawd.home}/asset" prefix="/var/lib/tawd/asset" username="root" group="root">
+				<include name="*.html" />
+				<include name="*.js" />
+				<include name="*.txt" />
+				<include name="*.css" />
+			</tarfileset>
+			
+			<!-- Initial account data (for admin user) -->
+			<tarfileset dir="${basedir}/common/basicsetup" prefix="/var/lib/tawd" username="root" group="root">
+				<include name="**/*.txt"/>
+			</tarfileset>
+
+			<!-- Links (some targets are created in the post inst script -->
+			<link target="/var/log/tawd/AccessLog.txt" name="/var/lib/tawd/AccessLog.txt" />
+			<link target="/var/log/tawd/CheatLog.log" name="/var/lib/tawd/CheatLog.log" />
+			<link target="/var/log/tawd/crash_dump.txt" name="/var/lib/tawd/crash_dump.txt" />
+			<link target="/var/log/tawd/ErrorLog.txt" name="/var/lib/tawd/ErrorLog.txt" />
+			<link target="/var/log/tawd/EventLog.log" name="/var/lib/tawd/EventLog.log" />
+			<link target="/var/log/tawd/RegionChat.log" name="/var/lib/tawd/RegionChat.log" />
+			<link target="/var/log/tawd/ServerLog.txt" name="/var/lib/tawd/ServerLog.txt" />
+
+			<link target="/etc/tawd/ServerConfig.txt" name="/var/lib/tawd/ServerConfig.txt" />
+			<link target="/etc/tawd/in_game_news" name="/var/lib/tawd/asset/in_game_news" />
+			<link target="/etc/tawd/loading_announcements" name="/var/lib/tawd/asset/loading_announcements" />
+			<link target="/etc/tawd/tips" name="/var/lib/tawd/asset/tips" />
+			<link target="/usr/share/tawd/AIScript" name="/var/lib/tawd/AIScript" />
+			<link target="/usr/share/tawd/Data" name="/var/lib/tawd/Data" />
+			<link target="/var/lib/tawd/asset/Release/Current/HTTPChecksum.txt" name="/usr/share/tawd/Data/HTTPChecksum.txt" />
+			<link target="/usr/share/tawd/ItemMod" name="/var/lib/tawd/ItemMod" />
+			<link target="/usr/share/tawd/Loot" name="/var/lib/tawd/Loot" />
+			<link target="/usr/share/tawd/Packages" name="/var/lib/tawd/Packages" />
+			<link target="/usr/share/tawd/QuestScripts" name="/var/lib/tawd/QuestScripts" />
+			<link target="/usr/share/tawd/Scenery" name="/var/lib/tawd/Scenery" />
+			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
+
+			
+		</deb>
+	</target>
+
+	<target name="release-windows" depends="init,clean-staging,release-windows-files">
+		<mkdir dir="${build.dir}/release" />
+		<exec executable="${nsis.make}" dir="${basedir}/packaging/windows">
+			<arg value="tawd.nsis" />
+		</exec>
+	</target>
+
+	<!-- Clean -->
+
+	<target name="clean" depends="init,clean-staging">
+		<delete dir="${build.release}" />
+		<delete dir="${build.asset}" />
+	</target>
+</project>

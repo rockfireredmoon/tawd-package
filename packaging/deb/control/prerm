@@ -1,0 +1,7 @@
+#!/bin/sh
+ 	
+if /etc/init.d/tawd status
+then /etc/init.d/tawd stop >/dev/null
+fi
+
+exit 0
