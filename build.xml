@@ -68,12 +68,12 @@
 		<exec dir="${tawd.home}" executable="make">
 			<arg value="clean" />
 		</exec>
-		-->
 		<echo>Building server from scratch</echo>
 		<exec failonerror="true" dir="${tawd.home}" executable="make">
 			<arg value="-j" />
 			<arg value="1" />
 		</exec>
+		-->
 
 		<!-- Process control directory -->
 		<mkdir dir="${build.staging}" />
