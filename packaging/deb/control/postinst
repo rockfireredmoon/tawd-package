@@ -25,9 +25,7 @@ case "$1" in
     		/var/lib/tawd/IGForum /var/lib/tawd/Petitions /var/lib/tawd/VirtualItems \
     		/var/log/tawd
     		
-    	touch /var/log/tawd/CheatLog.log /var/log/tawd/crash_dump.txt /var/log/tawd/ErrorLog.txt \
-    		/var/log/tawd/EventLog.log /var/log/tawd/RegionChat.log /var/log/tawd/ServerLog.txt \
-    		/var/log/tawd/AccessLog.txt
+    	touch /var/log/tawd/crash_dump.txt
     		
     	update-rc.d tawd defaults
     	

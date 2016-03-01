@@ -84,9 +84,27 @@
 				<filter token="arch" value="${os.arch}" />
 			</filterset>
 		</copy>
-		
+
 		<!-- Configuration files -->
-		<copy file="${tawd.home}/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt"/>
+		<copy file="${tawd.home}/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt" />
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[ShutdownHandlerScript=]]></replacetoken>
+			<replacevalue><![CDATA[ShutdownHandlerScript=/etc/tawd/crash-handler.sh]]></replacevalue>
+		</replace>
+		<copy file="${tawd.home}/LogConfig.txt.sample" tofile="${build.staging}/LogConfig.txt" />
+		<replace dir="${build.staging}">
+			<include name="LogConfig.txt" />
+			<replacetoken><![CDATA[FILENAME             =  "Logs/]]></replacetoken>
+			<replacevalue><![CDATA[FILENAME             =  "/var/log/tawd/]]></replacevalue>
+		</replace>
+		<replace dir="${build.staging}">
+			<include name="LogConfig.txt" />
+			<replacetoken><![CDATA[TO_STANDARD_OUTPUT   =  true]]></replacetoken>
+			<replacevalue><![CDATA[TO_STANDARD_OUTPUT   =  false]]></replacevalue>
+		</replace>
+		
+		<echo file="${build.staging}/crash-handler.sh"></echo>
 	</target>
 
 	<target name="clean-staging">
@@ -131,7 +149,11 @@
 			</tarfileset>
 
 			<tarfileset dir="${build.staging}" filemode="600" username="root" group="root" prefix="/etc/tawd">
-				<include name="ServerConfig.txt"/>
+				<include name="ServerConfig.txt" />
+				<include name="LogConfig.txt" />
+			</tarfileset>
+			<tarfileset dir="${build.staging}" filemode="700" username="root" group="root" prefix="/etc/tawd">
+				<include name="crash-handler.sh" />
 			</tarfileset>
 
 			<!-- Static game data -->
@@ -153,7 +175,7 @@
 
 				<exclude name="Data/HTTPChecksum.txt" />
 			</tarfileset>
-			
+
 			<!-- Static assets -->
 			<tarfileset dir="${tawd.home}/asset" prefix="/var/lib/tawd/asset" username="root" group="root">
 				<include name="*.html" />
@@ -161,22 +183,16 @@
 				<include name="*.txt" />
 				<include name="*.css" />
 			</tarfileset>
-			
+
 			<!-- Initial account data (for admin user) -->
 			<tarfileset dir="${basedir}/common/basicsetup" prefix="/var/lib/tawd" username="root" group="root">
-				<include name="**/*.txt"/>
+				<include name="**/*.txt" />
 			</tarfileset>
 
 			<!-- Links (some targets are created in the post inst script -->
-			<link target="/var/log/tawd/AccessLog.txt" name="/var/lib/tawd/AccessLog.txt" />
-			<link target="/var/log/tawd/CheatLog.log" name="/var/lib/tawd/CheatLog.log" />
-			<link target="/var/log/tawd/crash_dump.txt" name="/var/lib/tawd/crash_dump.txt" />
-			<link target="/var/log/tawd/ErrorLog.txt" name="/var/lib/tawd/ErrorLog.txt" />
-			<link target="/var/log/tawd/EventLog.log" name="/var/lib/tawd/EventLog.log" />
-			<link target="/var/log/tawd/RegionChat.log" name="/var/lib/tawd/RegionChat.log" />
-			<link target="/var/log/tawd/ServerLog.txt" name="/var/lib/tawd/ServerLog.txt" />
-
 			<link target="/etc/tawd/ServerConfig.txt" name="/var/lib/tawd/ServerConfig.txt" />
+			<link target="/var/log/tawd/crash_dump.txt" name="/var/lib/tawd/crash_dump.txt" />
+			<link target="/etc/tawd/LogConfig.txt" name="/var/lib/tawd/LogConfig.txt" />
 			<link target="/etc/tawd/in_game_news" name="/var/lib/tawd/asset/in_game_news" />
 			<link target="/etc/tawd/loading_announcements" name="/var/lib/tawd/asset/loading_announcements" />
 			<link target="/etc/tawd/tips" name="/var/lib/tawd/asset/tips" />
@@ -191,7 +207,7 @@
 			<link target="/usr/share/tawd/Instance" name="/var/lib/tawd/Instance" />
 			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
 
-			
+
 		</deb>
 	</target>
 
