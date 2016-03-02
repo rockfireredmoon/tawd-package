@@ -8,6 +8,7 @@
 
 	<property name="nsis.make" value="makensis" />
 
+	<property name="build.systemd" value="true" />
 	<property name="build.version" value="0.0.1" />
 	<property name="build.dir" value="${basedir}/target" />
 	<property name="build.staging" value="${build.dir}/staging" />
@@ -16,6 +17,11 @@
 
 	<!-- Task definitions for tasks not part of core Ant -->
 	<taskdef name="deb" classname="org.vafer.jdeb.ant.DebAntTask" classpath="tools/jdeb-1.5.jar" />
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${basedir}/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
 
 	<!-- Supporting targets (not usually called directly) -->
 
@@ -105,6 +111,19 @@
 		</replace>
 		
 		<echo file="${build.staging}/crash-handler.sh"></echo>
+		
+		<mkdir dir="${build.staging}/init"/>
+		<if>
+			<equals arg1="${build.systemd}" arg2="true" />
+			<then>
+				<mkdir dir="${build.staging}/init/etc/init.d"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd" tofile="${build.staging}/init/etc/init.d"/>
+			</then>
+			<else>
+				<mkdir dir="${build.staging}/init/usr/lib/systemd/system"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd.service" tofile="${build.staging}/init/usr/lib/systemd/system"/>
+			</else>
+		</if>
 	</target>
 
 	<target name="clean-staging">
@@ -131,8 +150,8 @@
 
 			<!-- Service script -->
 
-			<tarfileset dir="${tawd.home}/Etc/Linux" prefix="/etc/init.d" filemode="755" username="root" group="root">
-				<include name="tawd" />
+			<tarfileset dir="${build.staging}/init" prefix="/" filemode="755" username="root" group="root">
+				<include name="**/*" />
 			</tarfileset>
 
 			<!-- Server binary -->
