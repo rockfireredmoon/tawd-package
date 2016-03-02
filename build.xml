@@ -120,8 +120,8 @@
 				<copy file="${tawd.home}/Etc/Linux/tawd" tofile="${build.staging}/init/etc/init.d"/>
 			</then>
 			<else>
-				<mkdir dir="${build.staging}/init/usr/lib/systemd/system"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd.service" tofile="${build.staging}/init/usr/lib/systemd/system"/>
+				<mkdir dir="${build.staging}/init/usr/lib/systemd/user"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd.service" tofile="${build.staging}/init/usr/lib/systemd/user"/>
 			</else>
 		</if>
 	</target>

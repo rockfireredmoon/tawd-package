@@ -27,9 +27,13 @@ case "$1" in
     		
     	touch /var/log/tawd/crash_dump.txt
     		
-    	update-rc.d tawd defaults
-    	
-    	/etc/init.d/tawd start
+    	if [ -f /usr/lib/systemd/user/tawd.service ] ; then
+    		systemctl enable tawd
+    		systemctl start tawd 
+    	else
+	    	update-rc.d tawd defaults
+	    	/etc/init.d/tawd start
+	    fi
     	 
     ;;
 

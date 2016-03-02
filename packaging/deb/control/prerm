@@ -1,7 +1,11 @@
 #!/bin/sh
  	
-if /etc/init.d/tawd status
-then /etc/init.d/tawd stop >/dev/null
+if [ -f /usr/lib/systemd/user/tawd.service ] ; then
+	systemctl stop tawd
+else
+	if /etc/init.d/tawd status
+	then /etc/init.d/tawd stop >/dev/null
+	fi
 fi
 
 exit 0
