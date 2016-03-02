@@ -30,7 +30,7 @@ case "$1" in
     	if [ -f /lib/systemd/system/tawd.service ] ; then
     		systemctl daemon-reload
     		systemctl start tawd 
-    	else
+    	elif [ -f /etc/init.d/tawd ] ; then
 	    	update-rc.d tawd defaults
 	    	/etc/init.d/tawd start
 	    fi
