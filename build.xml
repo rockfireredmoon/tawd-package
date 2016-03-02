@@ -116,8 +116,8 @@
 		<if>
 			<equals arg1="${build.systemd}" arg2="true" />
 			<then>
-				<mkdir dir="${build.staging}/init/usr/lib/systemd/user"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd.service" todir="${build.staging}/init/usr/lib/systemd/user"/>
+				<mkdir dir="${build.staging}/init/lib/systemd/system"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd.service" todir="${build.staging}/init/lib/systemd/system"/>
 			</then>
 			<else>
 				<mkdir dir="${build.staging}/init/etc/init.d"/>
