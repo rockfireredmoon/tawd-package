@@ -19,7 +19,7 @@
 	<taskdef name="deb" classname="org.vafer.jdeb.ant.DebAntTask" classpath="tools/jdeb-1.5.jar" />
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
-			<pathelement location="${basedir}/ant-contrib-1.0b3.jar" />
+			<pathelement location="${basedir}/tools/ant-contrib-1.0b3.jar" />
 		</classpath>
 	</taskdef>
 
