@@ -116,12 +116,12 @@
 		<if>
 			<equals arg1="${build.systemd}" arg2="true" />
 			<then>
-				<mkdir dir="${build.staging}/init/etc/init.d"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd" tofile="${build.staging}/init/etc/init.d"/>
+				<mkdir dir="${build.staging}/init/usr/lib/systemd/user"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd.service" todir="${build.staging}/init/usr/lib/systemd/user"/>
 			</then>
 			<else>
-				<mkdir dir="${build.staging}/init/usr/lib/systemd/user"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd.service" tofile="${build.staging}/init/usr/lib/systemd/user"/>
+				<mkdir dir="${build.staging}/init/etc/init.d"/>
+				<copy file="${tawd.home}/Etc/Linux/tawd" todir="${build.staging}/init/etc/init.d"/>
 			</else>
 		</if>
 	</target>
@@ -150,7 +150,7 @@
 
 			<!-- Service script -->
 
-			<tarfileset dir="${build.staging}/init" prefix="/" filemode="755" username="root" group="root">
+			<tarfileset dir="${build.staging}/init" filemode="755" username="root" group="root">
 				<include name="**/*" />
 			</tarfileset>
 
