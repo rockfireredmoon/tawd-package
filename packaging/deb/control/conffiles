@@ -1,4 +1,5 @@
 /etc/tawd/ServerConfig.txt
+/etc/tawd/LogConfig.txt
 /etc/tawd/in_game_news
 /etc/tawd/loading_announcements
 /etc/tawd/tips

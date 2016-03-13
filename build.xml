@@ -180,6 +180,7 @@
 
 				<include name="AIScript/**/*.nut" />
 				<include name="AIScript/**/*.txt" />
+				<include name="Books/**/*.txt" />
 				<include name="Data/**/*.txt" />
 				<include name="ItemMod/**/*.txt" />
 				<include name="ItemMod/**/*.csv" />
@@ -217,6 +218,7 @@
 			<link target="/etc/tawd/tips" name="/var/lib/tawd/asset/tips" />
 			<link target="/usr/share/tawd/AIScript" name="/var/lib/tawd/AIScript" />
 			<link target="/usr/share/tawd/Data" name="/var/lib/tawd/Data" />
+			<link target="/usr/share/tawd/Books" name="/var/lib/tawd/Books" />
 			<link target="/var/lib/tawd/asset/Release/Current/HTTPChecksum.txt" name="/usr/share/tawd/Data/HTTPChecksum.txt" />
 			<link target="/usr/share/tawd/ItemMod" name="/var/lib/tawd/ItemMod" />
 			<link target="/usr/share/tawd/Loot" name="/var/lib/tawd/Loot" />
