@@ -56,7 +56,7 @@
 
 		<!-- Assets -->
 		<mkdir dir="${build.asset}" />
-		<copy todir="${build.asset}">
+		<copy todir="${build.asset}" failonerror="true">
 			<fileset dir="${tawd.asset}">
 				<include name="Release/**/*.car" />
 			</fileset>
@@ -88,6 +88,12 @@
 			<filterset begintoken="[[" endtoken="]]">
 				<filter token="version" value="${build.fullversion}" />
 				<filter token="arch" value="${os.arch}" />
+			</filterset>
+		</copy>
+		<copy todir="${build.staging}/asset-control">
+			<fileset dir="${basedir}/packaging/asset-deb/control" />
+			<filterset begintoken="[[" endtoken="]]">
+				<filter token="version" value="${build.fullversion}" />
 			</filterset>
 		</copy>
 
@@ -215,6 +221,7 @@
 			<link target="/etc/tawd/LogConfig.txt" name="/var/lib/tawd/LogConfig.txt" />
 			<link target="/etc/tawd/in_game_news" name="/var/lib/tawd/asset/in_game_news" />
 			<link target="/etc/tawd/loading_announcements" name="/var/lib/tawd/asset/loading_announcements" />
+			<link target="/usr/share/tawd/Asset/Release" name="/var/lib/tawd/asset/Release" />
 			<link target="/etc/tawd/tips" name="/var/lib/tawd/asset/tips" />
 			<link target="/usr/share/tawd/AIScript" name="/var/lib/tawd/AIScript" />
 			<link target="/usr/share/tawd/Data" name="/var/lib/tawd/Data" />
@@ -228,6 +235,16 @@
 			<link target="/usr/share/tawd/Instance" name="/var/lib/tawd/Instance" />
 			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
 
+
+		</deb>
+
+		<deb destfile="${build.dir}/release/tawd-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
+
+			<!-- Service script -->
+
+			<tarfileset dir="${build.asset}" prefix="/usr/share/tawd/Asset" filemode="555" username="root" group="root">
+				<include name="**/*" />
+			</tarfileset>
 
 		</deb>
 	</target>

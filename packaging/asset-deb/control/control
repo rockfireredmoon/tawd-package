@@ -1,0 +1,10 @@
+Package: tawd-asset
+Version: [[version]]
+Section: comm 
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 1024
+Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
+Description: Earth Eternal - The Anubian War Assets
+ Provides assets.
