@@ -24,6 +24,15 @@
 	</taskdef>
 
 	<!-- Supporting targets (not usually called directly) -->
+	<target name="prepare-assets">
+		<!-- Assets -->
+		<mkdir dir="${build.asset}" />
+		<copy todir="${build.asset}" failonerror="true">
+			<fileset dir="${tawd.asset}">
+				<include name="Release/**/*.car" />
+			</fileset>
+		</copy>
+	</target>
 
 	<target name="release-windows-files">
 		<mkdir dir="${build.staging}" />
@@ -54,20 +63,51 @@
 		<mkdir dir="${build.staging}/ZoneDef" />
 		<mkdir dir="${build.staging}/VirtualItems" />
 
-		<!-- Assets -->
-		<mkdir dir="${build.asset}" />
-		<copy todir="${build.asset}" failonerror="true">
-			<fileset dir="${tawd.asset}">
-				<include name="Release/**/*.car" />
-			</fileset>
-		</copy>
 
 		<!-- Executables -->
 		<copy file="${tawd.executables}/tawd.exe" todir="${build.staging}" />
 		<copy file="${tawd.executables}/tawdsvc.exe" todir="${build.staging}" />
 	</target>
 
-	<target name="release-linux-deb">
+	<target name="clean-staging">
+		<delete dir="${build.staging}" />
+	</target>
+
+	<target name="init">
+		<tstamp>
+			<format property="build.date" pattern="yyyyMMDDHHmm" />
+		</tstamp>
+		<property name="build.fullversion">${build.version}-${build.date}</property>
+	</target>
+
+	<!-- Primary targets -->
+
+	<target name="release" depends="release-windows,release-linux">
+	</target>
+	
+	<target name="release-linux" depends="release-linux-assets,release-linux-deb">
+	</target>
+
+	<target name="release-linux-assets" depends="init,clean-staging,prepare-assets">
+
+		<copy todir="${build.staging}/asset-control">
+			<fileset dir="${basedir}/packaging/asset-deb/control" />
+			<filterset begintoken="[[" endtoken="]]">
+				<filter token="version" value="${build.fullversion}" />
+			</filterset>
+		</copy>
+				
+		<deb destfile="${build.dir}/release/tawd-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
+			<!-- Service script -->
+			<tarfileset dir="${build.asset}" prefix="/usr/share/tawd/Asset" filemode="555" username="root" group="root">
+				<include name="**/*" />
+			</tarfileset>
+
+		</deb>
+	</target>
+		
+	<target name="prepare-linux">
+
 		<!--
 		<exec dir="${tawd.home}" executable="./configure" />
 		<echo>Removing all files for clean build</echo>
@@ -80,22 +120,6 @@
 			<arg value="1" />
 		</exec>
 		-->
-
-		<!-- Process control directory -->
-		<mkdir dir="${build.staging}" />
-		<copy todir="${build.staging}/control">
-			<fileset dir="${basedir}/packaging/deb/control" />
-			<filterset begintoken="[[" endtoken="]]">
-				<filter token="version" value="${build.fullversion}" />
-				<filter token="arch" value="${os.arch}" />
-			</filterset>
-		</copy>
-		<copy todir="${build.staging}/asset-control">
-			<fileset dir="${basedir}/packaging/asset-deb/control" />
-			<filterset begintoken="[[" endtoken="]]">
-				<filter token="version" value="${build.fullversion}" />
-			</filterset>
-		</copy>
 
 		<!-- Configuration files -->
 		<copy file="${tawd.home}/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt" />
@@ -131,26 +155,20 @@
 			</else>
 		</if>
 	</target>
+		
 
-	<target name="clean-staging">
-		<delete dir="${build.staging}" />
-	</target>
+	<target name="release-linux-deb" depends="init,clean-staging,prepare-linux">		
 
-	<target name="init">
-		<tstamp>
-			<format property="build.date" pattern="yyyyMMDDHHmm" />
-		</tstamp>
-		<property name="build.fullversion">${build.version}-${build.date}</property>
-	</target>
-
-	<!-- Primary targets -->
-
-	<target name="release" depends="release-windows,release-linux">
-
-
-	</target>
-
-	<target name="release-linux" depends="init,clean-staging,release-linux-deb">
+		<!-- Process control directory -->
+		<mkdir dir="${build.staging}" />
+		<copy todir="${build.staging}/control">
+			<fileset dir="${basedir}/packaging/deb/control" />
+			<filterset begintoken="[[" endtoken="]]">
+				<filter token="version" value="${build.fullversion}" />
+				<filter token="arch" value="${os.arch}" />
+			</filterset>
+		</copy>
+			
 		<mkdir dir="${build.dir}/release" />
 		<deb destfile="${build.dir}/release/tawd-${build.fullversion}-${os.arch}.deb" control="${build.staging}/control">
 
@@ -235,16 +253,6 @@
 			<link target="/usr/share/tawd/Instance" name="/var/lib/tawd/Instance" />
 			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
 
-
-		</deb>
-
-		<deb destfile="${build.dir}/release/tawd-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
-
-			<!-- Service script -->
-
-			<tarfileset dir="${build.asset}" prefix="/usr/share/tawd/Asset" filemode="555" username="root" group="root">
-				<include name="**/*" />
-			</tarfileset>
 
 		</deb>
 	</target>
