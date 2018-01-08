@@ -5,6 +5,7 @@ Priority: optional
 Architecture: [[arch]]
 Essential: no
 Depends: libcurl3-cares | libcurl3 | libcurl4-openssl, libssl1.0.0
+Recommends: redis-server, redis-tools
 Installed-Size: 1024
 Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
 Provides: tawd

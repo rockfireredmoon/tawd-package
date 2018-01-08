@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for tawd
+# postinst script for tawd data
 #
 # see: dh_installdeb(1)
 
@@ -20,18 +20,7 @@ set -e
 
 case "$1" in
     configure)
-    	mkdir -p /var/log/tawd
-    		
-    	touch /var/log/tawd/crash_dump.txt
-    		
-    	if [ -f /lib/systemd/system/tawd.service ] ; then
-    		systemctl daemon-reload
-    		systemctl start tawd 
-    	elif [ -f /etc/init.d/tawd ] ; then
-	    	update-rc.d tawd defaults
-	    	/etc/init.d/tawd start
-	    fi
-    	 
+    	mkdir -p /var/lib/tawd/Variable/Audit
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

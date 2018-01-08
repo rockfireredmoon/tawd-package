@@ -3,8 +3,8 @@
 
 	<property file="build.properties" />
 	<property name="tawd.home" value="../tawd" />
-	<property name="tawd.executables" value="${tawd.home}/SOURCE/Server" />
-	<property name="tawd.asset" value="${tawd.home}/asset" />
+	<property name="tawd.asset" value="${tawd.home}/../sparkplayer-eartheternal/bin/assets" />
+	<property name="tawd.data" value="${tawd.home}/../iceee-data" />
 
 	<property name="nsis.make" value="makensis" />
 
@@ -30,6 +30,7 @@
 		<copy todir="${build.asset}" failonerror="true">
 			<fileset dir="${tawd.asset}">
 				<include name="Release/**/*.car" />
+				<include name="Release/Current/*.txt" />
 			</fileset>
 		</copy>
 	</target>
@@ -65,8 +66,8 @@
 
 
 		<!-- Executables -->
-		<copy file="${tawd.executables}/tawd.exe" todir="${build.staging}" />
-		<copy file="${tawd.executables}/tawdsvc.exe" todir="${build.staging}" />
+		<copy file="${tawd.home}/SOURCE/Daemon/tawd.exe" todir="${build.staging}" />
+		<copy file="${tawd.home}/SOURCE/Daemon/tawdsvc.exe" todir="${build.staging}" />
 	</target>
 
 	<target name="clean-staging">
@@ -85,7 +86,7 @@
 	<target name="release" depends="release-windows,release-linux">
 	</target>
 	
-	<target name="release-linux" depends="release-linux-assets,release-linux-deb">
+	<target name="release-linux" depends="release-linux-assets,release-linux-data,release-linux-deb">
 	</target>
 
 	<target name="release-linux-assets" depends="init,clean-staging,prepare-assets">
@@ -98,9 +99,28 @@
 		</copy>
 				
 		<deb destfile="${build.dir}/release/tawd-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
-			<!-- Service script -->
 			<tarfileset dir="${build.asset}" prefix="/usr/share/tawd/Asset" filemode="555" username="root" group="root">
 				<include name="**/*" />
+			</tarfileset>
+
+		</deb>
+	</target>
+
+	<target name="release-linux-data" depends="init,clean-staging">
+
+		<copy todir="${build.staging}/data-control">
+			<fileset dir="${basedir}/packaging/data-deb/control" />
+			<filterset begintoken="[[" endtoken="]]">
+				<filter token="version" value="${build.fullversion}" />
+			</filterset>
+		</copy>
+				
+		<deb destfile="${build.dir}/release/tawd-data-${build.fullversion}.deb" control="${build.staging}/data-control">
+			<tarfileset dir="${tawd.data}" prefix="/usr/share/tawd" filemode="555" username="root" group="root">
+				<include name="Static/**/*" />
+			</tarfileset>
+			<tarfileset dir="${tawd.data}" prefix="/var/lib/tawd" filemode="555" username="root" group="root">
+				<include name="Variable/**/*" />
 			</tarfileset>
 
 		</deb>
@@ -122,13 +142,40 @@
 		-->
 
 		<!-- Configuration files -->
-		<copy file="${tawd.home}/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt" />
+		<copy file="${tawd.home}/Local/LogConfig.txt.sample" tofile="${build.staging}/LogConfig.txt" />
+		<copy file="${tawd.home}/Local/Cluster.txt.sample" tofile="${build.staging}/Cluster.txt" />
+		<copy file="${tawd.home}/Local/ServerConfig.txt.sample" tofile="${build.staging}/ServerConfig.txt" />
 		<replace dir="${build.staging}">
 			<include name="ServerConfig.txt" />
 			<replacetoken><![CDATA[ShutdownHandlerScript=]]></replacetoken>
 			<replacevalue><![CDATA[ShutdownHandlerScript=/etc/tawd/crash-handler.sh]]></replacevalue>
 		</replace>
-		<copy file="${tawd.home}/LogConfig.txt.sample" tofile="${build.staging}/LogConfig.txt" />
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[StaticDataPath=../iceee-data/Static]]></replacetoken>
+			<replacevalue><![CDATA[StaticDataPath=/usr/share/tawd/Static]]></replacevalue>
+		</replace>
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[VariableDataPath=../iceee-data/Variable]]></replacetoken>
+			<replacevalue><![CDATA[VariableDataPath=/var/lib/tawd/Variable]]></replacevalue>
+		</replace>
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[HTTPBaseFolder=asset]]></replacetoken>
+			<replacevalue><![CDATA[HTTPBaseFolder=/var/lib/tawd/asset]]></replacevalue>
+		</replace>
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[HTTPCARFolder=../sparkplayer-eartheternal/bin/assets]]></replacetoken>
+			<replacevalue><![CDATA[HTTPCARFolder=/usr/share/tawd/Asset]]></replacevalue>
+		</replace>
+		<replace dir="${build.staging}">
+			<include name="ServerConfig.txt" />
+			<replacetoken><![CDATA[LogPath=Logs]]></replacetoken>
+			<replacevalue><![CDATA[LogPath=/var/log/tawd]]></replacevalue>
+		</replace>
+		<copy file="${tawd.home}/Local/LogConfig.txt.sample" tofile="${build.staging}/LogConfig.txt" />
 		<replace dir="${build.staging}">
 			<include name="LogConfig.txt" />
 			<replacetoken><![CDATA[FILENAME             =  "Logs/]]></replacetoken>
@@ -178,46 +225,20 @@
 				<include name="**/*" />
 			</tarfileset>
 
-			<!-- Server binary -->
-
-			<tarfileset dir="${tawd.home}/SOURCE/Server" prefix="/usr/bin" filemode="555" username="root" group="root">
+			<!-- Binaries -->
+			<tarfileset dir="${tawd.home}/SOURCE/Daemon" prefix="/usr/bin" filemode="555" username="root" group="root">
 				<include name="tawd" />
 			</tarfileset>
-
-			<!-- Configuration -->
-			<tarfileset dir="${tawd.home}/asset" prefix="/etc/tawd" filemode="600" username="root" group="root">
-				<include name="in_game_news" />
-				<include name="tips" />
-				<include name="loading_announcements" />
+			<tarfileset dir="${tawd.home}/SOURCE/Tools" prefix="/usr/bin" filemode="555" username="root" group="root">
+				<include name="text2redis" />
+				<include name="eeaccount" />
 			</tarfileset>
 
 			<tarfileset dir="${build.staging}" filemode="600" username="root" group="root" prefix="/etc/tawd">
 				<include name="ServerConfig.txt" />
 				<include name="LogConfig.txt" />
-			</tarfileset>
-			<tarfileset dir="${build.staging}" filemode="700" username="root" group="root" prefix="/etc/tawd">
+				<include name="Cluster.txt" />
 				<include name="crash-handler.sh" />
-			</tarfileset>
-
-			<!-- Static game data -->
-			<tarfileset dir="${tawd.home}" prefix="/usr/share/tawd" username="root" group="root">
-
-				<include name="AIScript/**/*.nut" />
-				<include name="AIScript/**/*.txt" />
-				<include name="Books/**/*.txt" />
-				<include name="Data/**/*.txt" />
-				<include name="ItemMod/**/*.txt" />
-				<include name="ItemMod/**/*.csv" />
-				<include name="Loot/**/*.txt" />
-				<include name="Packages/**/*.txt" />
-				<include name="QuestScripts/**/*.nut" />
-				<include name="Scenery/**/*.txt" />
-				<include name="Instance/**/*.txt" />
-				<include name="Instance/**/*.nut" />
-				<include name="Scenery/**/*.zip" />
-				<include name="SpawnPackages/**/*.txt" />
-
-				<exclude name="Data/HTTPChecksum.txt" />
 			</tarfileset>
 
 			<!-- Static assets -->
@@ -228,32 +249,11 @@
 				<include name="*.css" />
 			</tarfileset>
 
-			<!-- Initial account data (for admin user) -->
-			<tarfileset dir="${basedir}/common/basicsetup" prefix="/var/lib/tawd" username="root" group="root">
-				<include name="**/*.txt" />
-			</tarfileset>
-
-			<!-- Links (some targets are created in the post inst script -->
-			<link target="/etc/tawd/ServerConfig.txt" name="/var/lib/tawd/ServerConfig.txt" />
+			<!-- Links (some targets are created in the post inst script
+			<link target="/etc/tawd/ServerConfig.txt" name="/var/lib/tawd/Local/ServerConfig.txt" />
+			<link target="/etc/tawd/Cluster.txt" name="/var/lib/tawd/Local/Cluster.txt" />
 			<link target="/var/log/tawd/crash_dump.txt" name="/var/lib/tawd/crash_dump.txt" />
-			<link target="/etc/tawd/LogConfig.txt" name="/var/lib/tawd/LogConfig.txt" />
-			<link target="/etc/tawd/in_game_news" name="/var/lib/tawd/asset/in_game_news" />
-			<link target="/etc/tawd/loading_announcements" name="/var/lib/tawd/asset/loading_announcements" />
-			<link target="/usr/share/tawd/Asset/Release" name="/var/lib/tawd/asset/Release" />
-			<link target="/etc/tawd/tips" name="/var/lib/tawd/asset/tips" />
-			<link target="/usr/share/tawd/AIScript" name="/var/lib/tawd/AIScript" />
-			<link target="/usr/share/tawd/Data" name="/var/lib/tawd/Data" />
-			<link target="/usr/share/tawd/Books" name="/var/lib/tawd/Books" />
-			<link target="/var/lib/tawd/asset/Release/Current/HTTPChecksum.txt" name="/usr/share/tawd/Data/HTTPChecksum.txt" />
-			<link target="/usr/share/tawd/ItemMod" name="/var/lib/tawd/ItemMod" />
-			<link target="/usr/share/tawd/Loot" name="/var/lib/tawd/Loot" />
-			<link target="/usr/share/tawd/Packages" name="/var/lib/tawd/Packages" />
-			<link target="/usr/share/tawd/QuestScripts" name="/var/lib/tawd/QuestScripts" />
-			<link target="/usr/share/tawd/Scenery" name="/var/lib/tawd/Scenery" />
-			<link target="/usr/share/tawd/Instance" name="/var/lib/tawd/Instance" />
-			<link target="/usr/share/tawd/SpawnPackages" name="/var/lib/tawd/SpawnPackages" />
-
-
+			<link target="/etc/tawd/LogConfig.txt" name="/var/lib/tawd/Local/LogConfig.txt" /> -->
 		</deb>
 	</target>
 
