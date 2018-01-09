@@ -5,6 +5,7 @@
 	<property name="tawd.home" value="../tawd" />
 	<property name="tawd.asset" value="${tawd.home}/../sparkplayer-eartheternal/bin/assets" />
 	<property name="tawd.data" value="${tawd.home}/../iceee-data" />
+	<property name="tawd.edition" value="the-anubian-war" />
 
 	<property name="nsis.make" value="makensis" />
 
@@ -14,6 +15,7 @@
 	<property name="build.staging" value="${build.dir}/staging" />
 	<property name="build.asset" value="${build.dir}/asset" />
 	<property name="build.release" value="${build.dir}/release" />
+	<property name="build.rebuild.server" value="true" />
 
 	<!-- Task definitions for tasks not part of core Ant -->
 	<taskdef name="deb" classname="org.vafer.jdeb.ant.DebAntTask" classpath="tools/jdeb-1.5.jar" />
@@ -22,6 +24,24 @@
 			<pathelement location="${basedir}/tools/ant-contrib-1.0b3.jar" />
 		</classpath>
 	</taskdef>
+
+	<target name="get-cores">
+		<property environment="env" />
+		<!-- support for Windows -->
+		<condition property="cores.count" value="${env.NUMBER_OF_PROCESSORS}">
+			<os family="windows" />
+		</condition>
+		<!-- support for Linux and Solaris (package SUNWgnu-coreutils is required) -->
+		<exec executable="nproc" outputproperty="cores.count" os="Linux,SunOS,Solaris">
+			<arg value="--all" />
+		</exec>
+		<!-- support for Mac OS X -->
+		<exec executable="sysctl" outputproperty="cores.count" os="Mac OS X">
+			<arg value="-n" />
+			<arg value="hw.ncpu" />
+		</exec>
+		<echo message="Number of cores: ${cores.count}" />
+	</target>
 
 	<!-- Supporting targets (not usually called directly) -->
 	<target name="prepare-assets">
@@ -75,17 +95,18 @@
 	</target>
 
 	<target name="init">
+		<antcall target="get-cores"/>
 		<tstamp>
 			<format property="build.date" pattern="yyyyMMDDHHmm" />
 		</tstamp>
-		<property name="build.fullversion">${build.version}-${build.date}</property>
+		<property name="build.fullversion">${build.version}${build.date}</property>
 	</target>
 
 	<!-- Primary targets -->
 
 	<target name="release" depends="release-windows,release-linux">
 	</target>
-	
+
 	<target name="release-linux" depends="release-linux-assets,release-linux-data,release-linux-deb">
 	</target>
 
@@ -95,10 +116,12 @@
 			<fileset dir="${basedir}/packaging/asset-deb/control" />
 			<filterset begintoken="[[" endtoken="]]">
 				<filter token="version" value="${build.fullversion}" />
+				<filter token="edition" value="${tawd.edition}" />
+				<filter token="editionFullName" value="${tawd.edition.fullname}" />
 			</filterset>
 		</copy>
-				
-		<deb destfile="${build.dir}/release/tawd-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
+
+		<deb destfile="${build.dir}/release/${tawd.edition}-asset-${build.fullversion}.deb" control="${build.staging}/asset-control">
 			<tarfileset dir="${build.asset}" prefix="/usr/share/tawd/Asset" filemode="555" username="root" group="root">
 				<include name="**/*" />
 			</tarfileset>
@@ -112,10 +135,12 @@
 			<fileset dir="${basedir}/packaging/data-deb/control" />
 			<filterset begintoken="[[" endtoken="]]">
 				<filter token="version" value="${build.fullversion}" />
+				<filter token="edition" value="${tawd.edition}" />
+				<filter token="editionFullName" value="${tawd.edition.fullname}" />
 			</filterset>
 		</copy>
-				
-		<deb destfile="${build.dir}/release/tawd-data-${build.fullversion}.deb" control="${build.staging}/data-control">
+
+		<deb destfile="${build.dir}/release/${tawd.edition}-data-${build.fullversion}.deb" control="${build.staging}/data-control">
 			<tarfileset dir="${tawd.data}" prefix="/usr/share/tawd" filemode="555" username="root" group="root">
 				<include name="Static/**/*" />
 			</tarfileset>
@@ -125,21 +150,33 @@
 
 		</deb>
 	</target>
-		
-	<target name="prepare-linux">
 
-		<!--
-		<exec dir="${tawd.home}" executable="./configure" />
-		<echo>Removing all files for clean build</echo>
-		<exec dir="${tawd.home}" executable="make">
-			<arg value="clean" />
-		</exec>
-		<echo>Building server from scratch</echo>
-		<exec failonerror="true" dir="${tawd.home}" executable="make">
-			<arg value="-j" />
-			<arg value="1" />
-		</exec>
-		-->
+	<target name="prepare-linux">
+		<if>
+			<equals arg1="${build.rebuild.server}" arg2="true" />
+			<then>
+				<exec dir="${tawd.home}" executable="./configure">
+					<arg value="--bindir=/usr/bin" />
+					<arg value="--sbindir=/sbin" />
+					<arg value="--libexecdir=/usr/libexec" />
+					<arg value="--sysconfdir=/etc" />
+					<arg value="--libdir=/usr/lib" />
+					<arg value="--datarootdir=/usr/share" />
+					<arg value="--localstatedir=/var" />
+					<arg value="--with-localconfigdir=/etc/tawd" />
+					<arg value="--enable-debug" />
+				</exec>
+				<echo>Removing all files for clean build</echo>
+				<exec dir="${tawd.home}" executable="make">
+					<arg value="clean" />
+				</exec>
+				<echo>Building server from scratch</echo>
+				<exec failonerror="true" dir="${tawd.home}" executable="make">
+					<arg value="-j" />
+					<arg value="4" />
+				</exec>
+			</then>
+		</if>
 
 		<!-- Configuration files -->
 		<copy file="${tawd.home}/Local/LogConfig.txt.sample" tofile="${build.staging}/LogConfig.txt" />
@@ -186,36 +223,39 @@
 			<replacetoken><![CDATA[TO_STANDARD_OUTPUT   =  true]]></replacetoken>
 			<replacevalue><![CDATA[TO_STANDARD_OUTPUT   =  false]]></replacevalue>
 		</replace>
-		
-		<echo file="${build.staging}/crash-handler.sh"></echo>
-		
-		<mkdir dir="${build.staging}/init"/>
+
+		<echo file="${build.staging}/crash-handler.sh">
+		</echo>
+
+		<mkdir dir="${build.staging}/init" />
 		<if>
 			<equals arg1="${build.systemd}" arg2="true" />
 			<then>
-				<mkdir dir="${build.staging}/init/lib/systemd/system"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd.service" todir="${build.staging}/init/lib/systemd/system"/>
+				<mkdir dir="${build.staging}/init/lib/systemd/system" />
+				<copy file="${tawd.home}/Etc/Linux/tawd.service" todir="${build.staging}/init/lib/systemd/system" />
 			</then>
 			<else>
-				<mkdir dir="${build.staging}/init/etc/init.d"/>
-				<copy file="${tawd.home}/Etc/Linux/tawd" todir="${build.staging}/init/etc/init.d"/>
+				<mkdir dir="${build.staging}/init/etc/init.d" />
+				<copy file="${tawd.home}/Etc/Linux/tawd" todir="${build.staging}/init/etc/init.d" />
 			</else>
 		</if>
 	</target>
-		
 
-	<target name="release-linux-deb" depends="init,clean-staging,prepare-linux">		
+
+	<target name="release-linux-deb" depends="init,clean-staging,prepare-linux">
 
 		<!-- Process control directory -->
 		<mkdir dir="${build.staging}" />
 		<copy todir="${build.staging}/control">
 			<fileset dir="${basedir}/packaging/deb/control" />
 			<filterset begintoken="[[" endtoken="]]">
+				<filter token="edition" value="${tawd.edition}" />
+				<filter token="editionFullName" value="${tawd.edition.fullname}" />
 				<filter token="version" value="${build.fullversion}" />
 				<filter token="arch" value="${os.arch}" />
 			</filterset>
 		</copy>
-			
+
 		<mkdir dir="${build.dir}/release" />
 		<deb destfile="${build.dir}/release/tawd-${build.fullversion}-${os.arch}.deb" control="${build.staging}/control">
 

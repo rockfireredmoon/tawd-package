@@ -1,4 +1,4 @@
-Package: tawd-data
+Package: [[edition]]-data
 Version: [[version]]
 Section: comm 
 Priority: optional
@@ -6,5 +6,7 @@ Architecture: all
 Essential: no
 Installed-Size: 1024
 Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
-Description: Earth Eternal - The Anubian War Server Data
+Provides: tawd-data
+Description: Earth Eternal - [[editionFullName]] Server Data
  Provides static and default variable server data.
+Conflicts: the-anubian-war-data

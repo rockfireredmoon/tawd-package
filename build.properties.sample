@@ -1,2 +1,5 @@
-tawd.home=/home/user/Workspaces/PFServer/EEServer36
-tawd.executables=/home/user/Desktop/Share
+tawd.home=../tawd
+tawd.asset=${tawd.home}/../sparkplayer-eartheternal/bin/assets
+tawd.data=${tawd.home}/../iceee-data
+tawd.edition=the-anubian-war
+tawd.edition.fullname=The Anubian War
