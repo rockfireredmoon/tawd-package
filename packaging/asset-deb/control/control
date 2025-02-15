@@ -5,6 +5,7 @@ Priority: optional
 Architecture: all
 Essential: no
 Installed-Size: 1024
+Depends: tawd
 Provides: tawd-asset
 Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
 Description: Earth Eternal - [[editionFullName]] Client Assets

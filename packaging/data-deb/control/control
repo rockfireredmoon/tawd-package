@@ -7,6 +7,7 @@ Essential: no
 Installed-Size: 1024
 Maintainer: Emerald Icemoon <emerald.icemoon@gmail.com>
 Provides: tawd-data
+Depends: tawd
 Description: Earth Eternal - [[editionFullName]] Server Data
  Provides static and default variable server data.
 Conflicts: the-anubian-war-data

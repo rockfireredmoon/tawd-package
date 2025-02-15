@@ -1,7 +1,6 @@
 /etc/tawd/ServerConfig.txt
 /etc/tawd/LogConfig.txt
 /etc/tawd/Cluster.txt
-/etc/tawd/in_game_news
-/etc/tawd/loading_announcements
-/etc/tawd/tips
+/etc/tawd/HTTPConfig.txt
+/etc/tawd/URL.txt
 /etc/tawd/crash-handler.sh
